@@ -109,11 +109,4 @@ def admin_logout():
     return redirect(url_for('home'))
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=10000)rl_for('admin_panel'))
-
-if __name__ == '__main__':
-    # Start self-ping thread
-    ping_thread = Thread(target=self_ping, daemon=True)
-    ping_thread.start()
-
-    app.run(host='0.0.0.0', port=10000)
+    app.run(host='0.0.0.0', portt=10000)
