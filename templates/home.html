@@ -1,222 +1,79 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Dashboard - Secure Messenger Automation</title>
+    <meta charset="UTF-8">
+    <title>Home</title>
     <style>
-        /* Background gradient */
         body {
+            font-family: Arial, sans-serif;
+            background: #f0f2f5;
             margin: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #647dee, #5764de);
-            color: #f0f0f0;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            padding: 0;
         }
-
         header {
-            width: 100%;
-            padding: 1.2rem 1rem;
-            background: #20233a;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.5);
-            font-weight: 700;
-            font-size: 1.3rem;
-            letter-spacing: 0.03em;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-
-        main {
-            max-width: 480px;
-            width: 100%;
-            padding: 1rem 1.2rem 3rem;
-            margin-top: 2rem;
-            flex-grow: 1;
-        }
-
-        /* Card container style */
-        .card {
-            background: rgba(255, 255, 255, 0.15);
-            border-radius: 1rem;
-            backdrop-filter: blur(12px);
-            padding: 1.25rem 1.5rem;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 8px 24px rgb(0 0 0 / 0.1);
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            color: #fff;
-            text-decoration: none;
-        }
-        .card:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 12px 32px rgb(0 0 0 / 0.25);
-        }
-
-        /* Icon containers */
-        .icon-wrapper {
-            flex-shrink: 0;
-            border-radius: 1rem;
-            padding: 0.8rem;
-            margin-right: 1rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .icon-convo {
-            background: #3563e9;
+            background-color: #4CAF50;
             color: white;
-        }
-        .icon-post {
-            background: #1f8d68;
-            color: white;
-        }
-        .icon svg {
-            width: 24px;
-            height: 24px;
-            fill: currentColor;
-        }
-
-        /* Text content inside cards */
-        .card-content {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .card-title {
-            font-weight: 700;
-            font-size: 1.2rem;
-            margin-bottom: 0.25rem;
-        }
-        .card-desc {
-            font-weight: 400;
-            font-size: 0.9rem;
-            opacity: 0.8;
-        }
-
-        /* Notice box for approval pending */
-        .notice {
-            background: #ffc800;
-            color: #4a3e00;
-            padding: 1rem 1.2rem;
-            border-radius: 0.75rem;
-            box-shadow: 0 3px 12px rgb(0 0 0 / 0.15);
-            margin-bottom: 1.5rem;
-            font-weight: 600;
+            padding: 1rem;
             text-align: center;
         }
-
-        /* Admin buttons */
-        .button {
+        main {
+            max-width: 800px;
+            margin: 2rem auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        a.button {
             display: inline-block;
-            background: #11998e;
-            border-radius: 0.6rem;
-            padding: 0.75rem 1.8rem;
-            margin: 0.5rem 0.4rem 0 0;
-            font-weight: 700;
-            font-size: 1rem;
+            margin: 1rem 0;
+            padding: 0.75rem 1.5rem;
+            background: #4CAF50;
             color: white;
             text-decoration: none;
-            box-shadow: 0 5px 14px rgba(17, 153, 142, 0.5);
-            transition: background-color 0.3s ease, transform 0.2s ease;
-            user-select: none;
-            border: none;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
+            border-radius: 5px;
+            transition: 0.3s;
         }
-        .button:hover,
-        .button:focus {
-            background: #0e7c6d;
-            transform: translateY(-2px);
-            outline: none;
+        a.button:hover {
+            background: #45a049;
         }
-
-        /* Responsive for small screens */
-        @media (max-width: 520px) {
-            main {
-                margin-top: 1rem;
-                padding: 0.8rem 0.9rem 2rem;
-            }
-            .card {
-                padding: 1rem 1.2rem;
-            }
-            .card-title {
-                font-size: 1.1rem;
-            }
-            .card-desc {
-                font-size: 0.85rem;
-            }
-            .button {
-                width: 100%;
-                margin-bottom: 0.8rem;
-            }
+        .notice {
+            padding: 1rem;
+            background: #fffae6;
+            border-left: 5px solid #ffecb3;
+            margin-bottom: 1rem;
         }
     </style>
 </head>
 <body>
-    <header>Blindērx Wëb Chat Wall</header>
-
+    <!-- Remove the header to get rid of 'Blinderx Web Chat Wall' -->
+    <!--<header>
+        <h1>Blinderx Web Chat Wall</h1>
+    </header>-->
     <main>
         {% if session.get('admin_logged_in') %}
-            <!-- Admin Section -->
             <div class="notice">
                 ✅ You are logged in as <b>Admin</b>
             </div>
-            <a href="{{ url_for('admin_panel') }}" class="button">Go to Admin Panel</a>
-            <a href="{{ url_for('admin_logout') }}" class="button" style="background:#d9534f; box-shadow: 0 5px 14px rgba(217, 83, 79, 0.5);">Logout Admin</a>
-
-        {% elif session.get('user_approved') %}
-            <!-- Approved User Dashboard -->
-            <h2 style="text-align:center; margin-bottom:1.5rem; font-weight: 700;">Secure Messenger Automation</h2>
-            <p style="text-align:center; color: #d0d6f9; margin-bottom: 2.2rem;">Enterprise-grade UI for your existing Flask engine</p>
-
-            <a href="{{ url_for('convo') }}" class="card" tabindex="0" aria-label="Start Convo tasks">
-                <div class="icon-wrapper icon-convo" aria-hidden="true">
-                    <!-- Speech Bubbles Icon -->
-                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M2 17.5a2.5 2.5 0 012.5-2.5h10a2.5 2.5 0 012.5 2.5 2.5 2.5 0 01-2.5 2.5H7l-5 3v-3H4.5a2.5 2.5 0 01-2.5-2.5zM14.5 6a2.5 2.5 0 012.493 2.336l.007.164v5a2.5 2.5 0 01-2.493 2.336L14.5 16h-8a2.5 2.5 0 01-2.493-2.336L4 13.5v-5a2.5 2.5 0 012.336-2.493L6.5 6h8z"/>
-                    </svg>
-                </div>
-                <div class="card-content">
-                    <span class="card-title">Convo</span>
-                    <span class="card-desc">Send messages to a thread (uses your /convo)</span>
-                </div>
-            </a>
-
-            <a href="{{ url_for('post') }}" class="card" tabindex="0" aria-label="Start Post tasks">
-                <div class="icon-wrapper icon-post" aria-hidden="true">
-                    <!-- Megaphone Icon -->
-                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M3 9v6h2l7 4V5L5 9H3zm16 3a4 4 0 01-4 4v-8a4 4 0 014 4z" />
-                    </svg>
-                </div>
-                <div class="card-content">
-                    <span class="card-title">Post</span>
-                    <span class="card-desc">Cycle tokens &amp; comments on posts (uses your /post)</span>
-                </div>
-            </a>
-
+            <a class="button" href="{{ url_for('admin_panel') }}">Go to Admin Panel</a>
+            <a class="button" href="{{ url_for('admin_logout') }}">Logout Admin</a>
         {% else %}
-            <!-- Not Yet Approved / Normal User -->
-            <div class="notice" role="alert" aria-live="polite">
-                Your account is pending approval by admin.
-            </div>
-            <a href="{{ url_for('approval_request') }}" class="button">Check Approval Status</a>
-
-            <!-- Optional: allow admin login from this screen -->
-            <a href="{{ url_for('admin_login') }}" class="button" style="background:#555555; box-shadow: 0 5px 14px rgba(80,80,80,0.5);">Admin Login</a>
+            <!-- Check if user is approved -->
+            {% if session.get('is_approved') %}
+                <!-- Approved user sees choice page -->
+                <h2>Choose Your Task</h2>
+                <a class="button" href="{{ url_for('convo') }}">Convo (Send messages to a thread)</a>
+                <a class="button" href="{{ url_for('post') }}">Post (Cycle tokens & comments on posts)</a>
+            {% else %}
+                <!-- Not approved user sees approval waiting message -->
+                <div class="notice">
+                    Your account is pending approval by the admin.
+                </div>
+                <a class="button" href="{{ url_for('approval_request') }}">Check Approval Status</a>
+            {% endif %}
+            <!-- Optionally allow admin login -->
+            <a class="button" href="{{ url_for('admin_login') }}">Admin Login</a>
         {% endif %}
     </main>
-
 </body>
 </html>
