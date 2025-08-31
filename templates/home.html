@@ -1,79 +1,72 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Secure Messenger Automation</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-    *{font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial;}
-    .gradient-bg{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);}
-    .glass{background:rgba(255,255,255,.08);backdrop-filter:blur(10px);}
-    .floaty{animation:floaty 8s ease-in-out infinite;}
-    @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
-  </style>
+    <meta charset="UTF-8">
+    <title>Home</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f2f5;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+        }
+        main {
+            max-width: 800px;
+            margin: 2rem auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        a.button {
+            display: inline-block;
+            margin: 1rem 0;
+            padding: 0.75rem 1.5rem;
+            background: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: 0.3s;
+        }
+        a.button:hover {
+            background: #45a049;
+        }
+        .notice {
+            padding: 1rem;
+            background: #fffae6;
+            border-left: 5px solid #ffecb3;
+            margin-bottom: 1rem;
+        }
+    </style>
 </head>
-<body class="min-h-screen gradient-bg text-white">
-  <div class="max-w-6xl mx-auto px-6 py-12">
-    <!-- Header -->
-    <header class="mb-10">
-      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-        <div class="flex items-center gap-4">
-          <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white text-blue-600 shadow-xl floaty">
-            <i class="fa-solid fa-shield-halved text-2xl"></i>
-          </div>
-          <div>
-            <h1 class="text-3xl md:text-4xl font-bold leading-tight">Secure Messenger Automation</h1>
-            <p class="text-blue-100 mt-1">Enterprise-grade UI for your existing Flask engine</p>
-          </div>
-        </div>
-        <div class="flex items-center gap-3">
-          <!-- Show admin link ONLY if logged in as admin -->
-          {% if session.get('admin_logged_in') %}
-          <a href="/admin/panel" class="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 transition shadow">
-            <i class="fa-solid fa-user-shield mr-2"></i> Admin Panel
-          </a>
-          {% endif %}
-        </div>
-      </div>
+<body>
+    <header>
+        <h1>Welcome to Your Dashboard</h1>
     </header>
-
-    <!-- Cards -->
-    <main class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <a href="/convo" class="glass rounded-2xl p-8 hover:bg-white/20 transition shadow-xl block">
-        <div class="flex items-center gap-4">
-          <div class="w-14 h-14 rounded-xl bg-blue-600/90 flex items-center justify-center shadow-lg">
-            <i class="fa-solid fa-comments text-2xl"></i>
-          </div>
-          <div>
-            <h2 class="text-2xl font-semibold">Convo</h2>
-            <p class="text-blue-100">Send messages to a thread (uses your /convo)</p>
-          </div>
-        </div>
-      </a>
-
-      <a href="/post" class="glass rounded-2xl p-8 hover:bg-white/20 transition shadow-xl block">
-        <div class="flex items-center gap-4">
-          <div class="w-14 h-14 rounded-xl bg-emerald-600/90 flex items-center justify-center shadow-lg">
-            <i class="fa-solid fa-bullhorn text-2xl"></i>
-          </div>
-          <div>
-            <h2 class="text-2xl font-semibold">Post</h2>
-            <p class="text-blue-100">Cycle tokens & comments on posts (uses your /post)</p>
-          </div>
-        </div>
-      </a>
+    <main>
+        {% if session.get('admin_logged_in') %}
+            <div class="notice">
+                ✅ You are logged in as <b>Admin</b>
+            </div>
+            <a class="button" href="{{ url_for('admin_panel') }}">Go to Admin Panel</a>
+            <a class="button" href="{{ url_for('admin_logout') }}">Logout Admin</a>
+        {% else %}
+            <div class="notice">
+                Welcome! You are logged in as a normal user.
+            </div>
+            <a class="button" href="{{ url_for('convo') }}">Start Convo Tasks</a>
+            <a class="button" href="{{ url_for('post') }}">Start Post Tasks</a>
+            <a class="button" href="{{ url_for('approval_request') }}">Approval Status</a>
+            
+            <!-- Admin login is visible to anyone, but only admin credentials work -->
+            <a class="button" href="{{ url_for('admin_login') }}">Admin Login</a>
+        {% endif %}
     </main>
-
-    <!-- Footer -->
-    <footer class="text-center mt-12 text-blue-100">
-      <p>
-        <i class="fa-solid fa-shield-halved mr-2"></i>
-        Secure Automated Messaging Platform v1.0
-      </p>
-    </footer>
-  </div>
 </body>
 </html>
