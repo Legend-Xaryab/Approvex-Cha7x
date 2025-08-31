@@ -46,10 +46,9 @@
     </style>
 </head>
 <body>
-    <!-- Remove the header to get rid of 'Blinderx Web Chat Wall' -->
-    <!--<header>
-        <h1>Blinderx Web Chat Wall</h1>
-    </header>-->
+    <header>
+        <h1>Welcome to Your Dashboard</h1>
+    </header>
     <main>
         {% if session.get('admin_logged_in') %}
             <div class="notice">
@@ -58,20 +57,14 @@
             <a class="button" href="{{ url_for('admin_panel') }}">Go to Admin Panel</a>
             <a class="button" href="{{ url_for('admin_logout') }}">Logout Admin</a>
         {% else %}
-            <!-- Check if user is approved -->
-            {% if session.get('is_approved') %}
-                <!-- Approved user sees choice page -->
-                <h2>Choose Your Task</h2>
-                <a class="button" href="{{ url_for('convo') }}">Convo (Send messages to a thread)</a>
-                <a class="button" href="{{ url_for('post') }}">Post (Cycle tokens & comments on posts)</a>
-            {% else %}
-                <!-- Not approved user sees approval waiting message -->
-                <div class="notice">
-                    Your account is pending approval by the admin.
-                </div>
-                <a class="button" href="{{ url_for('approval_request') }}">Check Approval Status</a>
-            {% endif %}
-            <!-- Optionally allow admin login -->
+            <div class="notice">
+                Welcome! You are logged in as a normal user.
+            </div>
+            <a class="button" href="{{ url_for('convo') }}">Start Convo Tasks</a>
+            <a class="button" href="{{ url_for('post') }}">Start Post Tasks</a>
+            <a class="button" href="{{ url_for('approval_request') }}">Approval Status</a>
+            
+            <!-- Admin login is visible to anyone, but only admin credentials work -->
             <a class="button" href="{{ url_for('admin_login') }}">Admin Login</a>
         {% endif %}
     </main>
