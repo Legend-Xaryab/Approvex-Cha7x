@@ -30,10 +30,12 @@
           </div>
         </div>
         <div class="flex items-center gap-3">
-          <!-- Single Admin entry point: login first, then auto-redirects to panel after success -->
-          <a href="/admin/login" class="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 transition shadow">
-            <i class="fa-solid fa-user-shield mr-2"></i> Admin
+          <!-- Show admin link ONLY if logged in as admin -->
+          {% if session.get('admin_logged_in') %}
+          <a href="/admin/panel" class="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 transition shadow">
+            <i class="fa-solid fa-user-shield mr-2"></i> Admin Panel
           </a>
+          {% endif %}
         </div>
       </div>
     </header>
