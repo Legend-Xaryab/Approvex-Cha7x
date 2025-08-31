@@ -5,41 +5,57 @@ import time
 import random
 import string
 
-# --- added imports for approval/admin ---
+# Added imports for admin/approval
 from flask import session, redirect, url_for
+import os
 
 app = Flask(__name__)
 app.debug = True
 
-# --- secret key for sessions (added) ---
+# Secret key for sessions (change this)
 app.secret_key = 'k8m2p9x7w4n6q1v5z3c8b7f2j9r4t6y1u3i5o8e2a7s9d4g6h1l3'
 
-# --- approval system state (added) ---
+# Approval system state
 approved_users = set()
 pending_requests = set()
 
-# --- admin credentials (change as needed) ---
+# Admin credentials (change these)
 ADMIN_USERNAME = 'admin'
 ADMIN_PASSWORD = 'adminpass123'
 
-# --- helper to identify a device/user (added) ---
+# Helper to identify a device/user (by IP)
 def get_user_id():
-    # Prefer X-Forwarded-For if behind proxy (Render, etc.)
     ip = (request.headers.get('X-Forwarded-For') or request.remote_addr or '').split(',')[0].strip()
-    # Keep it simple/stable: IP-based identifier
     return ip
 
-# --- approval middleware (robust path-based) (added) ---
+# Approval middleware: protect admin panel, require approval for others
 @app.before_request
 def check_approval():
     path = (request.path or '/')
-    # Always allow admin and approval routes and static files
-    if path.startswith('/admin') or path.startswith('/approval') or path.startswith('/static') or path == '/favicon.ico':
+
+    # Always allow static and favicon
+    if path.startswith('/static') or path == '/favicon.ico':
         return
+
+    # Admin paths protection
+    if path.startswith('/admin'):
+        # Allow reaching the login page
+        if path == '/admin/login':
+            return
+        # All other /admin/* must have an active admin session
+        if not session.get('admin_logged_in'):
+            return redirect(url_for('admin_login'))
+        return
+
+    # Approval pages are accessible without admin or approval
+    if path.startswith('/approval'):
+        return
+
     # Admin can access everything
     if session.get('admin_logged_in'):
         return
-    # Non-admins must be approved
+
+    # Non-admin users must be approved
     user_id = get_user_id()
     if user_id not in approved_users:
         return redirect(url_for('approval_request'))
@@ -189,7 +205,7 @@ def self_ping():
             print("⚠️ Self-ping failed")
         time.sleep(300)  # Ping every 5 minutes
 
-# -------------------- Approval + Admin routes (added) --------------------
+# -------------------- Approval + Admin routes --------------------
 @app.route('/approval_request', methods=['GET', 'POST'])
 def approval_request():
     user_id = get_user_id()
@@ -209,14 +225,16 @@ def approval_sent():
 
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
+    # If already logged in, go straight to panel
     if session.get('admin_logged_in'):
         return redirect(url_for('admin_panel'))
+
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
         if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
             session['admin_logged_in'] = True
-            session.permanent = True  # make session persistent
+            session.permanent = True  # keep the session alive
             return redirect(url_for('admin_panel'))
         else:
             return render_template('admin_login.html', error=True)
@@ -224,8 +242,10 @@ def admin_login():
 
 @app.route('/admin/logout')
 def admin_logout():
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin_login'))
     session.pop('admin_logged_in', None)
-    return redirect(url_for('admin_login'))
+    return redirect(url_for('home'))
 
 @app.route('/admin/panel')
 def admin_panel():
