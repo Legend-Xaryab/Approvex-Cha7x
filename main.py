@@ -1,34 +1,46 @@
-from flask import Flask, request, render_template, session, redirect, url_for, flash
+from flask import Flask, request, render_template
 import requests
 from threading import Thread, Event
 import time
 import random
 import string
 
+# --- added imports for approval/admin ---
+from flask import session, redirect, url_for
+
 app = Flask(__name__)
 app.debug = True
 
-# SECRET KEY FOR SESSIONS (ADDED FOR APPROVAL SYSTEM)
+# --- secret key for sessions (added) ---
 app.secret_key = 'k8m2p9x7w4n6q1v5z3c8b7f2j9r4t6y1u3i5o8e2a7s9d4g6h1l3'
 
-# APPROVAL SYSTEM DATA (ADDED)
+# --- approval system state (added) ---
 approved_users = set()
 pending_requests = set()
+
+# --- admin credentials (change as needed) ---
 ADMIN_USERNAME = 'admin'
 ADMIN_PASSWORD = 'adminpass123'
 
-# APPROVAL SYSTEM CHECK (ADDED)
+# --- helper to identify a device/user (added) ---
+def get_user_id():
+    # Prefer X-Forwarded-For if behind proxy (Render, etc.)
+    ip = (request.headers.get('X-Forwarded-For') or request.remote_addr or '').split(',')[0].strip()
+    # Keep it simple/stable: IP-based identifier
+    return ip
+
+# --- approval middleware (robust path-based) (added) ---
 @app.before_request
 def check_approval():
-    allowed_endpoints = [
-        'static', 'admin_login', 'admin_logout', 'admin_panel',
-        'approve_user', 'reject_user', 'approval_request', 'remove_user', 'approval_sent'
-    ]
-    if request.endpoint in allowed_endpoints:
+    path = (request.path or '/')
+    # Always allow admin and approval routes and static files
+    if path.startswith('/admin') or path.startswith('/approval') or path.startswith('/static') or path == '/favicon.ico':
         return
+    # Admin can access everything
     if session.get('admin_logged_in'):
         return
-    user_id = request.remote_addr
+    # Non-admins must be approved
+    user_id = get_user_id()
     if user_id not in approved_users:
         return redirect(url_for('approval_request'))
 
@@ -177,11 +189,11 @@ def self_ping():
             print("⚠️ Self-ping failed")
         time.sleep(300)  # Ping every 5 minutes
 
-# APPROVAL SYSTEM ROUTES (ADDED)
+# -------------------- Approval + Admin routes (added) --------------------
 @app.route('/approval_request', methods=['GET', 'POST'])
 def approval_request():
-    user_id = request.remote_addr
-    if user_id in approved_users:
+    user_id = get_user_id()
+    if user_id in approved_users or session.get('admin_logged_in'):
         return redirect(url_for('home'))
     if request.method == 'POST':
         if user_id not in pending_requests:
@@ -204,6 +216,7 @@ def admin_login():
         password = request.form.get('password')
         if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
             session['admin_logged_in'] = True
+            session.permanent = True  # make session persistent
             return redirect(url_for('admin_panel'))
         else:
             return render_template('admin_login.html', error=True)
