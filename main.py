@@ -18,7 +18,7 @@ approved_users = set()
 pending_requests = set()
 
 # Admin credentials
-ADMIN_USERNAME = 'Admin'
+ADMIN_USERNAME = 'Blinder'
 ADMIN_PASSWORD = 'Rulex'
 
 # ----------------- Running Tasks Dictionary -----------------
