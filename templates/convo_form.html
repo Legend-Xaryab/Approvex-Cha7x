@@ -85,6 +85,9 @@
           </label>
           <input name="time" id="time" type="number" min="1" placeholder="e.g. 5"
                  class="w-full rounded-lg border border-gray-300 px-4 py-3 focus:ring-2 focus:ring-blue-500" required>
+          <p id="intervalNotice" class="text-xs text-red-600 mt-1">
+            ⚠️ Please set interval more than 8 seconds, otherwise your loader will not run.
+          </p>
         </div>
 
         <!-- Messages file -->
@@ -151,13 +154,23 @@
       });
     });
 
-    // Progressive enhancement: fetch, show modal with backend HTML, extract task id(s)
     const form = document.getElementById('convoForm');
     const modal = document.getElementById('resultModal');
     const resultHtml = document.getElementById('resultHtml');
     const taskBox = document.getElementById('taskBox');
     const taskIdOut = document.getElementById('taskIdOut');
 
+    // Interval validation
+    form.addEventListener('submit', (e) => {
+      const interval = parseInt(document.getElementById('time').value, 10);
+      if (interval < 9) {
+        e.preventDefault();
+        alert("⛔ Time interval is not correct. Please set it to 9 seconds or more.");
+        return;
+      }
+    }, true);
+
+    // Progressive enhancement: fetch, show modal with backend HTML, extract task id(s)
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const fd = new FormData(form);
@@ -195,4 +208,4 @@
     });
   </script>
 </body>
-            </html>
+</html>
