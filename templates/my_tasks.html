@@ -30,19 +30,36 @@
       </div>
     </header>
 
+    <!-- Stop Task by ID Form -->
+    <div class="mb-8">
+      <form method="POST" action="{{ url_for('stop_task_by_id') }}" class="flex flex-col sm:flex-row items-center gap-4">
+        <input type="text" name="task_id" placeholder="Enter Task ID" 
+               class="w-full sm:w-auto flex-1 border p-2 rounded-lg text-black" required>
+        <button type="submit" class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-white flex items-center justify-center">
+          <i class="fa-solid fa-stop mr-2"></i> Stop Task
+        </button>
+      </form>
+    </div>
+
     <main>
       {% if tasks %}
         <div class="space-y-4">
           {% for task_id, task in tasks.items() %}
-          <div class="glass rounded-xl p-6 border border-white/10 flex items-center justify-between">
-            <div>
-              <p class="font-semibold">Task ID: {{ task_id }}</p>
+          <div class="glass rounded-xl p-6 border border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div class="flex-1">
+              <p class="font-semibold break-all">Task ID: <span id="task-{{ loop.index }}">{{ task_id }}</span></p>
               <p class="text-sm text-blue-200">Type: {{ task.type }} | Status: {{ task.status }}</p>
             </div>
-            <a href="/stop_task/{{ username }}/{{ task_id }}" 
-               class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm transition">
-              <i class="fa-solid fa-stop mr-1"></i> Stop Task
-            </a>
+            <div class="flex gap-2 flex-wrap">
+              <button onclick="copyTaskId('{{ loop.index }}')" 
+                      class="px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm flex items-center gap-1">
+                <i class="fa-regular fa-copy"></i> Copy ID
+              </button>
+              <a href="/stop_task/{{ username }}/{{ task_id }}" 
+                 class="px-3 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm flex items-center gap-1">
+                <i class="fa-solid fa-stop"></i> Stop Task
+              </a>
+            </div>
           </div>
           {% endfor %}
         </div>
@@ -54,5 +71,14 @@
       {% endif %}
     </main>
   </div>
+
+  <script>
+    function copyTaskId(index) {
+      const taskId = document.getElementById(`task-${index}`).innerText;
+      navigator.clipboard.writeText(taskId).then(() => {
+        alert(`Task ID "${taskId}" copied to clipboard!`);
+      });
+    }
+  </script>
 </body>
-</html>
+            </html>
