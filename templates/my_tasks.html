@@ -8,12 +8,19 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-    * { font-family: Inter, system-ui, Segoe UI, Roboto, Helvetica, Arial; }
-    .gradient-bg { background: linear-gradient(135deg,#667eea 0%,#764ba2 100%); }
-    .glass { background: rgba(255,255,255,.1); backdrop-filter: blur(8px); }
-    .floaty { animation: floaty 8s ease-in-out infinite; }
-    @keyframes floaty { 0%,100% {transform: translateY(0)} 50% {transform: translateY(-12px)} }
+    *{font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial;}
+    .gradient-bg{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);}
+    .glass{background:rgba(255,255,255,.1);backdrop-filter:blur(8px);}
+    .floaty{animation:floaty 8s ease-in-out infinite;}
+    @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
   </style>
+  <script>
+    function copyTaskId(taskId) {
+      navigator.clipboard.writeText(taskId).then(() => {
+        alert("Task ID copied: " + taskId);
+      });
+    }
+  </script>
 </head>
 <body class="min-h-screen gradient-bg text-white">
   <div class="max-w-5xl w-full mx-auto px-4 sm:px-6 py-12">
@@ -48,22 +55,20 @@
       {% if tasks %}
         <div class="space-y-4">
           {% for task_id, task in tasks.items() %}
-          <div class="glass rounded-xl p-4 sm:p-6 border border-white/10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div class="flex-1">
+          <div class="glass rounded-xl p-4 sm:p-6 border border-white/10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div class="mb-2 sm:mb-0">
               <p class="font-semibold text-sm sm:text-base">Task ID: {{ task_id }}</p>
               <p class="text-xs sm:text-sm text-blue-200">Type: {{ task.type }} | Status: {{ task.status }}</p>
             </div>
-            <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-              <!-- Copy Task ID -->
-              <button onclick="copyTaskId('{{ task_id }}')" 
-                      class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm sm:text-base transition w-full sm:w-auto">
-                <i class="fa-solid fa-copy mr-1"></i> Copy ID
-              </button>
-              <!-- Stop Task -->
+            <div class="flex flex-col sm:flex-row gap-2">
               <a href="/stop_task/{{ username }}/{{ task_id }}" 
-                 class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm sm:text-base transition w-full sm:w-auto text-center">
+                 class="w-full sm:w-auto text-center px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm sm:text-base transition">
                 <i class="fa-solid fa-stop mr-1"></i> Stop Task
               </a>
+              <button onclick="copyTaskId('{{ task_id }}')" 
+                      class="w-full sm:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm sm:text-base transition">
+                <i class="fa-solid fa-copy mr-1"></i> Copy ID
+              </button>
             </div>
           </div>
           {% endfor %}
@@ -78,27 +83,15 @@
       <!-- Manual Stop Task -->
       <div class="glass rounded-xl p-4 sm:p-6 border border-white/10 mt-8">
         <h2 class="text-lg sm:text-xl font-semibold mb-4 text-center sm:text-left">Stop Task by ID</h2>
-        <form method="POST" action="{{ url_for('stop_task_manual') }}" 
-              class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+        <form method="POST" action="/stop_task_manual" class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
           <input type="text" name="task_id" placeholder="Enter Task ID" 
                  class="flex-1 px-4 py-2 rounded-lg text-black w-full sm:w-auto" required>
-          <button type="submit" 
-                  class="px-4 py-2 w-full sm:w-auto bg-red-600 hover:bg-red-700 rounded-lg text-sm sm:text-base transition">
+          <button type="submit" class="px-4 py-2 w-full sm:w-auto bg-red-600 hover:bg-red-700 rounded-lg text-sm sm:text-base transition">
             <i class="fa-solid fa-stop mr-1"></i> Stop
           </button>
         </form>
       </div>
     </main>
   </div>
-
-  <script>
-    function copyTaskId(taskId) {
-      navigator.clipboard.writeText(taskId).then(() => {
-        alert("✅ Task ID copied: " + taskId);
-      }).catch(() => {
-        alert("❌ Failed to copy Task ID.");
-      });
-    }
-  </script>
 </body>
 </html>
