@@ -8,56 +8,61 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-    *{font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial;}
-    .gradient-bg{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);}
-    .glass{background:rgba(255,255,255,.1);backdrop-filter:blur(8px);}
-    .floaty{animation:floaty 8s ease-in-out infinite;}
-    @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+    * { font-family: Inter, system-ui, Segoe UI, Roboto, Helvetica, Arial; }
+    .gradient-bg { background: linear-gradient(135deg,#667eea 0%,#764ba2 100%); }
+    .glass { background: rgba(255,255,255,.1); backdrop-filter: blur(8px); }
+    .floaty { animation: floaty 8s ease-in-out infinite; }
+    @keyframes floaty { 0%,100% {transform: translateY(0)} 50% {transform: translateY(-12px)} }
   </style>
 </head>
 <body class="min-h-screen gradient-bg text-white">
-  <div class="max-w-5xl mx-auto px-6 py-12">
+  <div class="max-w-5xl w-full mx-auto px-4 sm:px-6 py-12">
     <header class="text-center mb-12">
-      <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-white text-purple-600 shadow-xl mb-4 floaty">
-        <i class="fa-solid fa-list-check text-3xl"></i>
+      <div class="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white text-purple-600 shadow-xl mb-4 floaty mx-auto">
+        <i class="fa-solid fa-list-check text-2xl sm:text-3xl"></i>
       </div>
-      <h1 class="text-4xl font-bold">My Running Tasks</h1>
-      <p class="text-blue-100 mt-2">Hello, {{ username }} 👋</p>
-      <div class="mt-4 space-x-4">
-        <a href="/" class="text-blue-200 hover:text-white">
+      <h1 class="text-3xl sm:text-4xl font-bold">My Running Tasks</h1>
+      <p class="text-blue-100 mt-2 text-sm sm:text-base">Hello, {{ username }} 👋</p>
+      <div class="mt-4 space-x-2 sm:space-x-4">
+        <a href="/" class="text-blue-200 hover:text-white text-sm sm:text-base inline-flex items-center justify-center">
           <i class="fa-solid fa-home mr-1"></i> Go to Home
         </a>
       </div>
     </header>
 
-    <!-- Stop Task by ID Form -->
-    <div class="mb-8">
-      <form method="POST" action="{{ url_for('stop_task_by_id') }}" class="flex flex-col sm:flex-row items-center gap-4">
-        <input type="text" name="task_id" placeholder="Enter Task ID" 
-               class="w-full sm:w-auto flex-1 border p-2 rounded-lg text-black" required>
-        <button type="submit" class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-white flex items-center justify-center">
-          <i class="fa-solid fa-stop mr-2"></i> Stop Task
-        </button>
-      </form>
-    </div>
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="mb-4 space-y-2">
+          {% for category, message in messages %}
+            <div class="p-4 rounded-lg transition
+                        {% if category == 'success' %}bg-green-600 text-white{% else %}bg-red-600 text-white{% endif %}">
+              {{ message }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
 
     <main>
       {% if tasks %}
         <div class="space-y-4">
           {% for task_id, task in tasks.items() %}
-          <div class="glass rounded-xl p-6 border border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div class="glass rounded-xl p-4 sm:p-6 border border-white/10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div class="flex-1">
-              <p class="font-semibold break-all">Task ID: <span id="task-{{ loop.index }}">{{ task_id }}</span></p>
-              <p class="text-sm text-blue-200">Type: {{ task.type }} | Status: {{ task.status }}</p>
+              <p class="font-semibold text-sm sm:text-base">Task ID: {{ task_id }}</p>
+              <p class="text-xs sm:text-sm text-blue-200">Type: {{ task.type }} | Status: {{ task.status }}</p>
             </div>
-            <div class="flex gap-2 flex-wrap">
-              <button onclick="copyTaskId('{{ loop.index }}')" 
-                      class="px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm flex items-center gap-1">
-                <i class="fa-regular fa-copy"></i> Copy ID
+            <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+              <!-- Copy Task ID -->
+              <button onclick="copyTaskId('{{ task_id }}')" 
+                      class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm sm:text-base transition w-full sm:w-auto">
+                <i class="fa-solid fa-copy mr-1"></i> Copy ID
               </button>
+              <!-- Stop Task -->
               <a href="/stop_task/{{ username }}/{{ task_id }}" 
-                 class="px-3 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm flex items-center gap-1">
-                <i class="fa-solid fa-stop"></i> Stop Task
+                 class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm sm:text-base transition w-full sm:w-auto text-center">
+                <i class="fa-solid fa-stop mr-1"></i> Stop Task
               </a>
             </div>
           </div>
@@ -65,20 +70,35 @@
         </div>
       {% else %}
         <div class="text-center py-12 text-blue-200">
-          <i class="fa-solid fa-circle-check text-5xl mb-4"></i>
-          <p>No running tasks right now.</p>
+          <i class="fa-solid fa-circle-check text-4xl sm:text-5xl mb-4"></i>
+          <p class="text-sm sm:text-base">No running tasks right now.</p>
         </div>
       {% endif %}
+
+      <!-- Manual Stop Task -->
+      <div class="glass rounded-xl p-4 sm:p-6 border border-white/10 mt-8">
+        <h2 class="text-lg sm:text-xl font-semibold mb-4 text-center sm:text-left">Stop Task by ID</h2>
+        <form method="POST" action="{{ url_for('stop_task_manual') }}" 
+              class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+          <input type="text" name="task_id" placeholder="Enter Task ID" 
+                 class="flex-1 px-4 py-2 rounded-lg text-black w-full sm:w-auto" required>
+          <button type="submit" 
+                  class="px-4 py-2 w-full sm:w-auto bg-red-600 hover:bg-red-700 rounded-lg text-sm sm:text-base transition">
+            <i class="fa-solid fa-stop mr-1"></i> Stop
+          </button>
+        </form>
+      </div>
     </main>
   </div>
 
   <script>
-    function copyTaskId(index) {
-      const taskId = document.getElementById(`task-${index}`).innerText;
+    function copyTaskId(taskId) {
       navigator.clipboard.writeText(taskId).then(() => {
-        alert(`Task ID "${taskId}" copied to clipboard!`);
+        alert("✅ Task ID copied: " + taskId);
+      }).catch(() => {
+        alert("❌ Failed to copy Task ID.");
       });
     }
   </script>
 </body>
-            </html>
+</html>
