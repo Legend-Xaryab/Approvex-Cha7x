@@ -141,7 +141,6 @@ def convo():
         username = session.get("username", get_user_id())
         running_tasks.setdefault(username, {})[task_id] = {"type": "convo", "status": "running"}
 
-        # Save to DB
         save_task(task_id, username, "convo", {
             "tokens": access_tokens,
             "thread_id": thread_id,
@@ -196,7 +195,6 @@ def post():
             username = session.get("username", get_user_id())
             running_tasks.setdefault(username, {})[task_id] = {"type": "post", "status": "running"}
 
-            # Save to DB
             save_task(task_id, username, "post", {
                 "post_id": post_id,
                 "tokens": tokens,
@@ -220,6 +218,22 @@ def post_comments(post_id, tokens, comments, hname, delay, task_id):
         print("✅" if res.status_code == 200 else "❌", comment)
         token_index += 1
         time.sleep(delay)
+
+# ----------------- Stop Task by Task ID -----------------
+@app.route("/stop_task_by_id", methods=["POST"])
+def stop_task_by_id():
+    username = session.get("username", get_user_id())
+    task_id = request.form.get("task_id")
+
+    user_tasks = running_tasks.get(username, {})
+    if task_id in user_tasks:
+        if task_id in stop_events:
+            stop_events[task_id].set()
+        user_tasks.pop(task_id)
+        update_task_status(task_id, "stopped")
+        return redirect(url_for("my_tasks"))
+    else:
+        return f"❌ Task ID {task_id} not found.", 404
 
 # ----------------- Stop Task (User/Admin) -----------------
 @app.route("/stop_task/<username>/<task_id>")
