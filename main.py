@@ -235,7 +235,7 @@ def my_tasks():
     user_tasks = running_tasks.get(username, {})
     return render_template("my_tasks.html", username=username, tasks=user_tasks)
 
-# ----------------- Admin & Approval routes (unchanged) -----------------
+# ----------------- Admin & Approval routes -----------------
 @app.route('/approval_request', methods=['GET', 'POST'])
 def approval_request():
     user_id = get_user_id()
@@ -278,9 +278,18 @@ def admin_logout():
 def admin_panel():
     if not session.get('admin_logged_in'):
         return redirect(url_for('admin_login'))
-    return render_template('admin_panel.html',
-                           pending_requests=list(pending_requests),
-                           approved_users=list(approved_users))
+    return render_template(
+        'admin_panel.html',
+        pending_requests=list(pending_requests),
+        approved_users=list(approved_users)
+    )
+
+# ✅ NEW: Admin can view all running tasks
+@app.route('/admin/tasks')
+def admin_tasks():
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin_login'))
+    return render_template("admin_tasks.html", running_tasks=running_tasks)
 
 @app.route('/admin/approve/<user_id>')
 def approve_user(user_id):
